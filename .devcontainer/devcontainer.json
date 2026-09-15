@@ -6,18 +6,24 @@
         "context": "."
     },
 	"features": {
-		"ghcr.io/devcontainers/features/common-utils:2.4.2": {
-			"installZsh": "true",
-            "username": "vscode",
-            "userUid": "1000",
-            "userGid": "1000",
-            "upgradePackages": "true"
-        },
         "ghcr.io/gvatsal60/dev-container-features/pre-commit:1": {},
+		"ghcr.io/devcontainers/features/node:2.1.0": {},
+        "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
 	},
-	"postCreateCommand": "pre-commit install-hooks && pre-commit autoupdate",
+	"postCreateCommand": "mkdir -p $HOME/.claude && sudo chown -R vscode:vscode $HOME/.claude && pre-commit install-hooks && pre-commit autoupdate",
 	// install poetry on first startup in vscode
 	"postStartCommand": "poetry install",
+
+	"remoteEnv": {
+		// add the poetry to the PATH for the dev user vscode
+        "PATH": "/home/vscode/.local/bin:${containerEnv:PATH}",
+
+        // Propagate the GitHub token & Matlab licence server from the local environment to the container for use in scripts
+        // and tools that require authentication.
+        // this saves habing to login to GH when rebuilding dev container
+        "GH_TOKEN": "${localEnv:GH_TOKEN}",
+	},
 
 	// Configure tool-specific properties.
 	"customizations": {
@@ -31,18 +37,11 @@
                 // use the active venv
                 "python.defaultInterpreterPath": ".venv/bin/python3",
 
-				"terminal.integrated.defaultProfile.linux": "zsh",
-				"terminal.integrated.profiles.linux": {
-					"zsh": {
-						"path": "/bin/zsh"
-					}
-				}
 			},
 			"extensions": [
 				"EditorConfig.EditorConfig",
 				"ms-python.python",
-				"ms-python.flake8",
-				"ms-python.black-formatter",
+				"charliermarsh.ruff",
 				"github.vscode-github-actions",
 				"ms-vscode.hexeditor",
 				"ms-python.vscode-pylance",
@@ -53,6 +52,11 @@
 		}
 	},
 
+    "mounts": [
+        // shared claude code config volume for all containers so that devcontainer rebuilds maintain config
+        "source=claude-code-config,target=/home/vscode/.claude,type=volume"
+    ],
+
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
@@ -60,5 +64,6 @@
 	// "customizations": {},
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	"remoteUser": "vscode"
+	"remoteUser": "vscode",
+	"containerUser": "vscode"
 }
