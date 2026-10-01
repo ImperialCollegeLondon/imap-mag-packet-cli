@@ -182,6 +182,7 @@ pip install imap-data-access
 export KEY=SOME_SECRET
 export URL=https://api.imap-mission.com/api-key
 export START_DATE=20251015
+export NO_OF_DAYS=10
 
 # get the latests l0 files since X, get just file names, download them:
 IMAP_API_KEY=$KEY IMAP_DATA_ACCESS_URL=$URL imap-data-access query --instrument mag --start-date $START_DATE --data-level l0 --version latest
@@ -190,9 +191,9 @@ IMAP_API_KEY=$KEY IMAP_DATA_ACCESS_URL=$URL imap-data-access download imap_mag_l
 
 # Full example - Find, iterate, download, gapcheck packets file
 rm -f downloaded.txt
-IMAP_API_KEY=$KEY IMAP_DATA_ACCESS_URL=$URL imap-data-access query --instrument mag --start-date $START_DATE --data-level l0 --version latest | grep -iEwo 'imap_\w+.pkts' | while read -r line ; do
+IMAP_API_KEY=$KEY IMAP_DATA_ACCESS_URL=$URL imap-data-access query --instrument mag --start-date $START_DATE --data-level l0 --version latest | head -n $NO_OF_DAYS | grep -iEwo 'imap_[\w.]+.pkts' | while read -r line ; do
     echo "downloading $line"
-    IMAP_API_KEY=$KEY IMAP_DATA_ACCESS_URL=$URL imap-data-access download $line | grep -iEo '/[-a-z0-9\/_\.]+imap_mag\w+.pkts' | tee -a downloaded.txt
+    IMAP_API_KEY=$KEY IMAP_DATA_ACCESS_URL=$URL imap-data-access download $line | grep -iEo '/[-a-z0-9\/_\.]+imap_mag.*\.pkts' | tee -a downloaded.txt
 done
 
 cat downloaded.txt | while read -r line ; do
